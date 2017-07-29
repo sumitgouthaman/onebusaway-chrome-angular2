@@ -1,0 +1,31 @@
+{
+  "name": "One Bus Away",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "Track arrival times at bus stops near you. Powered by OneBusAway (https://onebusaway.org).",
+  "author": "Sumit Gouthaman",
+  "homepage_url": "https://github.com/sumitgouthaman/onebusaway-tracker-chrome",
+  "icons": {
+    "16": "assets/images/icon-16.png",
+    "32": "assets/images/icon-32.png",
+    "48": "assets/images/icon-48.png",
+    "128": "assets/images/icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "geolocation",
+    "https://*/*"
+  ],
+  "browser_action": {
+      "default_icon": {
+      "19": "assets/images/icon-19.png",
+      "38": "assets/images/icon-38.png",
+      "16": "assets/images/icon-16.png",
+      "32": "assets/images/icon-32.png",
+      "48": "assets/images/icon-48.png",
+      "128": "assets/images/icon-128.png"
+    },
+    "default_title": "One Bus Away",
+    "default_popup": "index.html"
+  }
+}

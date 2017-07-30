@@ -1,4 +1,17 @@
-<div fxLayout="column" fxLayoutGap="10px">
-  <p>Add Stop</p>
-  <button md-raised-button color="primary" (click)="done()">Done</button>
-</div>
+<section>
+  <md-card class="example-card">
+    <md-card-title>Add stop</md-card-title>
+    <md-card-content>
+      <md-list>
+        <md-list-item *ngFor="let stop of nearbyStops">
+          <button md-button (click)="addStop(stop)">
+            Stop# {{ stop.code }}: {{ stop.name }} ({{ stop.formattedDirection }} bound)
+          </button>
+        </md-list-item>
+      </md-list>
+    </md-card-content>
+    <md-card-actions>
+      <button md-raised-button color="primary" (click)="done()">Done</button>
+    </md-card-actions>
+  </md-card>
+</section>

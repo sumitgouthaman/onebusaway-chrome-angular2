@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { ObaService } from './oba-regions/oba.service';
-import { Region } from './oba-regions/region';
+import { ObaService } from './oba/oba.service';
+import { Region } from './oba/oba';
 
 @Component({
   selector: 'app-root',

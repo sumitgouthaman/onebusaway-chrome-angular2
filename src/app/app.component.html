@@ -16,5 +16,8 @@
     </md-card-content>
   </md-card>
 
-  <app-add-stop *ngIf="addStopsMode" (addStopsDone)="toggleAddStopsMode()"></app-add-stop>
+  <app-add-stop
+    *ngIf="addStopsMode"
+    [region]="selectedRegion"
+    (addStopsDone)="toggleAddStopsMode()"></app-add-stop>
 </div>

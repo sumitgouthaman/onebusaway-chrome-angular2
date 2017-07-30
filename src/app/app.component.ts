@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { ObaRegionsModule as Regions } from './oba-regions/oba-regions.module';
+import { ObaService } from './oba-regions/oba.service';
+import { Region } from './oba-regions/region';
 
 @Component({
   selector: 'app-root',
@@ -7,7 +8,24 @@ import { ObaRegionsModule as Regions } from './oba-regions/oba-regions.module';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'app';
-  regions: any = Regions.getRegions();
-  selectedRegion: any = Regions.getDefaultRegion(this.regions);
+
+  private obaService: ObaService;
+  regions: Array<Region>;
+  selectedRegion: Region;
+
+  addStopsMode = false;
+
+  constructor (obaService: ObaService) {
+    this.obaService = obaService;
+    this.obaService.getRegions().then(regions => {
+      this.regions = regions;
+    });
+    this.obaService.getDefaultRegion().then(region => {
+      this.selectedRegion = region;
+    });
+  }
+
+  toggleAddStopsMode() {
+    this.addStopsMode = !this.addStopsMode;
+  }
 }

@@ -1,10 +1,20 @@
-<md-toolbar>
-  <span>One Bus Away</span>
-  <span class="md-spacer"></span>
-  <span>
-    <md-select placeholder="Region" floatPlaceholder="never" [(ngModel)]="selectedRegion">
-      <md-option *ngFor="let region of regions" [value]="region">{{ region.regionName }}</md-option>
-    </md-select>
-  </span>
-</md-toolbar>
-{{ selectedRegion.regionName }}
+<div fxLayout="column" fxLayoutGap="10px">
+  <md-toolbar>
+    <span>One Bus Away</span>
+    <span class="md-spacer"></span>
+    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+      <md-select placeholder="Region" floatPlaceholder="never" [(ngModel)]="selectedRegion">
+        <md-option *ngFor="let region of regions" [value]="region">{{ region.regionName }}</md-option>
+      </md-select>
+      <button (click)="toggleAddStopsMode()" md-raised-button color="primary">Add stop</button>
+    </div>
+  </md-toolbar>
+
+  <md-card *ngIf="!selectedRegion">
+    <md-card-content>
+      No region selected.
+    </md-card-content>
+  </md-card>
+
+  <app-add-stop *ngIf="addStopsMode" (addStopsDone)="toggleAddStopsMode()"></app-add-stop>
+</div>

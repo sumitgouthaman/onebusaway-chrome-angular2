@@ -23,6 +23,7 @@ import { AddStopComponent } from './add-stop/add-stop.component';
 
 import { ObaService } from './oba/oba.service';
 import { GeoService } from './geo/geo.service';
+import { StorageService } from './storage/storage.service';
 
 @NgModule({
   declarations: [
@@ -47,6 +48,7 @@ import { GeoService } from './geo/geo.service';
   providers: [
     ObaService,
     GeoService,
+    StorageService,
   ],
   bootstrap: [AppComponent]
 })

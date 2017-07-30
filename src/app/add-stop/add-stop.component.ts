@@ -13,6 +13,7 @@ import { MdSnackBar } from '@angular/material';
 import { Region, Stop } from '../oba/oba';
 import { ObaService } from '../oba/oba.service';
 import { GeoService } from '../geo/geo.service';
+import { StorageService } from '../storage/storage.service';
 
 @Component({
   selector: 'app-add-stop',
@@ -30,6 +31,7 @@ export class AddStopComponent implements OnInit, OnChanges {
   constructor(
     private geoService: GeoService,
     private obaService: ObaService,
+    private storageService: StorageService,
     private snackBar: MdSnackBar) {
     this.coordsPromise = this.geoService.getLocation();
   }
@@ -51,8 +53,14 @@ export class AddStopComponent implements OnInit, OnChanges {
   }
 
   addStop(stop: Stop) {
-    this.snackBar.open(`Stop# ${stop.code} saved.`, undefined, {
-      duration: 500
+    this.storageService.addStop(stop).then(result => {
+      this.snackBar.open(`Stop# ${stop.code} saved.`, undefined, {
+        duration: 500
+      });
+    }).catch(error => {
+      this.snackBar.open(`Error: ${error}`, undefined, {
+        duration: 500
+      });
     });
   }
 

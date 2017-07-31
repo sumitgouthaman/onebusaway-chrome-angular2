@@ -24,11 +24,15 @@ import { AddStopComponent } from './add-stop/add-stop.component';
 import { ObaService } from './oba/oba.service';
 import { GeoService } from './geo/geo.service';
 import { StorageService } from './storage/storage.service';
+import { StopDetailsComponent } from './stop-collection/stop-details/stop-details.component';
+import { StopCollectionComponent } from './stop-collection/stop-collection.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    AddStopComponent
+    AddStopComponent,
+    StopDetailsComponent,
+    StopCollectionComponent
   ],
   imports: [
     BrowserModule,

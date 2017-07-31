@@ -20,4 +20,6 @@
     *ngIf="addStopsMode"
     [region]="selectedRegion"
     (addStopsDone)="toggleAddStopsMode()"></app-add-stop>
+
+  <app-stop-collection *ngIf="!addStopsMode" [stops]="savedStops"></app-stop-collection>
 </div>

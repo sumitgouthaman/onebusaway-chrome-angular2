@@ -1,21 +1,24 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ObaService } from './oba/oba.service';
-import { Region } from './oba/oba';
+import { Region, Stop } from './oba/oba';
+import { StorageService } from './storage/storage.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
 
-  private obaService: ObaService;
   regions: Array<Region>;
   selectedRegion: Region;
+  savedStops: Array<Stop>;
 
   addStopsMode = false;
 
-  constructor (obaService: ObaService) {
+  constructor (
+    private obaService: ObaService,
+    private storageService: StorageService) {
     this.obaService = obaService;
     this.obaService.getRegions().then(regions => {
       this.regions = regions;
@@ -25,7 +28,17 @@ export class AppComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.updateSavedStops();
+  }
+
   toggleAddStopsMode() {
     this.addStopsMode = !this.addStopsMode;
+  }
+
+  updateSavedStops() {
+    this.storageService.getAllStops().then(stops => {
+      this.savedStops = stops;
+    });
   }
 }

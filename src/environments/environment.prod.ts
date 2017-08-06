@@ -1,3 +1,4 @@
 export const environment = {
-  production: true
+  production: true,
+  obaApiKey: 'YOUR_PROD_API_KEY_HERE',
 };

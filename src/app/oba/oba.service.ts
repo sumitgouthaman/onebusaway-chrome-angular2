@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+
 import { Region, Stop, ArrivalDeparture } from './oba';
 import * as regionsData from './regions-v3.json';
 
@@ -11,7 +13,6 @@ export class ObaService {
 
   private allRegionsPromise: Promise<Array<Region>>;
   private defaultRegionPromise: Promise<Region>;
-  private key = 'YOUR_API_KEY_HERE';
 
   private static formatDirection(direction: string): string {
     return direction
@@ -65,7 +66,7 @@ export class ObaService {
         urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
         {
           params: new HttpParams()
-          .set('key', this.key)
+          .set('key', environment.obaApiKey)
           .set('lat', coords.latitude.toString())
           .set('lon', coords.longitude.toString())
         }
@@ -85,7 +86,7 @@ export class ObaService {
         urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
         {
           params: new HttpParams()
-          .set('key', this.key)
+          .set('key', environment.obaApiKey)
           .set('lat', coords.latitude.toString())
           .set('lon', coords.longitude.toString())
           .set('query', stopNumber.toString())
@@ -110,7 +111,7 @@ export class ObaService {
         urlJoin(stop.region.obaBaseUrl, `/api/where/arrivals-and-departures-for-stop/${stop.id}.json`),
         {
           params: new HttpParams()
-          .set('key', this.key)
+          .set('key', environment.obaApiKey)
         }
       ).subscribe((result: any) => {
         const arrivalDepartures: Array<ArrivalDeparture> = result.data.entry.arrivalsAndDepartures.map((ad: ArrivalDeparture) => {

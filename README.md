@@ -1,28 +1,27 @@
-# Oba
+OneBusAway Chrome extension (Angular 2)
+=======================================
+This is a handy little extension that lets you monitor bus stops near you for
+arrival times of upcoming buses.  
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.2.6.
+### Screenshot
+![Adding nearby stops](/screenshots/add_nearby_stop.gif "Adding nearby stops")
 
-## Development server
+### Important notes
+- Only the Puget Sound region is tested at the moment.  
+- Unit tests don't work. They are auto-generated versions from Angular CLI.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+### OneBusAway
+- This app is powered by the [OneBusAway API](https://onebusaway.org/).  
+- This app is not officially provided by OneBusAway.  
 
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-Before running the tests make sure you are serving the app via `ng serve`.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+### How to run the extension
+1. Make sure your local transit agency uses OneBusAway. This might be mentioned
+on their website. For eg. here's [Sound Transit's](https://www.soundtransit.org/Open-Transit-Data)
+open transit data website.  
+1. Update `src/environments/environment.prod.ts` with the OneBusAway API key
+in the `obaApiKey` variable.  
+    1. The KEY can be obtained by emailing your local transit agency. For
+    Sound Transit, send an email to [OBA_API_Key@soundtransit.org](mailto:OBA_API_Key@soundtransit.org?subject=API%20Key%20request).  
+1. Compile the app using `ng build --prod --aot`.  
+1. The `dist` folder contains the extension code. You can load this in chrome
+as an **unpacked extension** by following the instructions [here](https://developer.chrome.com/extensions/getstarted#unpacked).  

@@ -1,0 +1,17 @@
+<p *ngIf="items && !items.length && emptyMessage">
+  {{ emptyMessage }}
+</p>
+<table
+  class="table table-hover table-condensed"
+  *ngIf="items && items.length">
+  <thead>
+    <tr>
+      <th *ngFor="let column of columns">{{ column[0] }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="pointer" *ngFor="let item of items" (click)="handleClick(item)">
+      <td *ngFor="let column of columns">{{ item[column[1]] }}</td>
+    </tr>
+  </tbody>
+</table>

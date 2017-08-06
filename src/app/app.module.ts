@@ -16,6 +16,7 @@ import {
   MdProgressBarModule,
   MdListModule,
   MdSnackBarModule,
+  MdInputModule,
 } from '@angular/material';
 
 import { AppComponent } from './app.component';
@@ -26,13 +27,15 @@ import { GeoService } from './geo/geo.service';
 import { StorageService } from './storage/storage.service';
 import { StopDetailsComponent } from './stop-collection/stop-details/stop-details.component';
 import { StopCollectionComponent } from './stop-collection/stop-collection.component';
+import { BootstrapTableComponent } from './bootstrap-table/bootstrap-table.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AddStopComponent,
     StopDetailsComponent,
-    StopCollectionComponent
+    StopCollectionComponent,
+    BootstrapTableComponent
   ],
   imports: [
     BrowserModule,
@@ -47,7 +50,8 @@ import { StopCollectionComponent } from './stop-collection/stop-collection.compo
     MdButtonModule,
     MdProgressBarModule,
     MdListModule,
-    MdSnackBarModule
+    MdSnackBarModule,
+    MdInputModule,
   ],
   providers: [
     ObaService,

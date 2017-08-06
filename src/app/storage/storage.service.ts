@@ -6,6 +6,8 @@ import { Stop } from '../oba/oba';
 export class StorageService {
 
   private savedStopsKey = 'savedStops';
+  private addListeners: Array<(Stop) => void> = [];
+  private removeListeners: Array<(Stop) => void> = [];
 
   constructor() { }
 
@@ -32,6 +34,10 @@ export class StorageService {
           const dataToStore: any = {};
           dataToStore[this.savedStopsKey] = existingStops;
           chrome.storage.sync.set(dataToStore, () => {
+          console.log('storageService addStop "set" callback.');
+            this.addListeners.forEach(func => {
+            func(stop);
+          });
             resolve(true);
           });
         } else {
@@ -48,9 +54,23 @@ export class StorageService {
         const dataToStore: any = {};
         dataToStore[this.savedStopsKey] = filteredStops;
         chrome.storage.sync.set(dataToStore, () => {
+          console.log('storageService removeStop "set" callback.');
+          this.removeListeners.forEach(func => {
+            func(stop);
+          });
           resolve(true);
         });
       });
     });
+  }
+
+  subscribeToAdd(onAdd: (stop: Stop) => void) {
+    console.log('Add listener added to storageService.');
+    this.addListeners.push(onAdd);
+  }
+
+  subscribeToRemove(onRemove: (stop: Stop) => void) {
+    console.log('Remove listener added to storageService.');
+    this.removeListeners.push(onRemove);
   }
 }

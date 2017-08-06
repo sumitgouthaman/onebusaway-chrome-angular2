@@ -1,7 +1,6 @@
 import {
   Component,
   OnInit,
-  OnChanges,
   SimpleChanges,
   Input,
   Output,
@@ -20,13 +19,15 @@ import { StorageService } from '../storage/storage.service';
   templateUrl: './add-stop.component.html',
   styleUrls: ['./add-stop.component.css']
 })
-export class AddStopComponent implements OnInit, OnChanges {
+export class AddStopComponent implements OnInit {
 
-  @Input() region: Region;
   @Output() addStopsDone: EventEmitter<number> = new EventEmitter<number>();
 
   coordsPromise: Promise<Coordinates>;
   nearbyStops: Array<Stop>;
+  selectedRegion: Region;
+  allRegions: Array<Region>;
+  stopNumber: number;
 
   constructor(
     private geoService: GeoService,
@@ -34,19 +35,23 @@ export class AddStopComponent implements OnInit, OnChanges {
     private storageService: StorageService,
     private snackBar: MdSnackBar) {
     this.coordsPromise = this.geoService.getLocation();
+    this.obaService.getRegions().then(regions => {
+      this.allRegions = regions;
+      this.obaService.getDefaultRegion().then(region => {
+        this.selectedRegion = region;
+        if (region) {
+          this.loadNearbyStops();
+        }
+      });
+    });
   }
 
   ngOnInit() { }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (this.region) {
-      this.loadNearbyStops();
-    }
-  }
-
   private loadNearbyStops() {
+    this.nearbyStops = null;
     this.coordsPromise.then(coords => {
-      this.obaService.getNearbyStops(this.region, coords).then(stops => {
+      this.obaService.getNearbyStops(this.selectedRegion, coords).then(stops => {
         this.nearbyStops = stops;
       });
     });
@@ -54,17 +59,41 @@ export class AddStopComponent implements OnInit, OnChanges {
 
   addStop(stop: Stop) {
     this.storageService.addStop(stop).then(result => {
-      this.snackBar.open(`Stop# ${stop.code} saved.`, undefined, {
-        duration: 500
-      });
+      this.toast(`Stop# ${stop.code} saved.`);
     }).catch(error => {
-      this.snackBar.open(`Error: ${error}`, undefined, {
-        duration: 500
-      });
+      this.toast(`Error: ${error}`);
     });
+  }
+
+  addSpecificStops() {
+    console.log('addSpecificStops');
+    if (!this.selectedRegion) {
+      this.toast('No region selected.');
+    } else if (!this.stopNumber || !this.stopNumber.toString().trim()) {
+      console.log('addSpecificStops stop invalid.');
+      this.toast('Stop number invalid.');
+    } else {
+      this.coordsPromise.then(coords => {
+        this.obaService.getSpecificStop(this.selectedRegion, coords, this.stopNumber).then(stop => {
+          this.addStop(stop);
+        }).catch(error => {
+          this.toast(error);
+        });
+      });
+    }
+  }
+
+  regionChanged() {
+    this.loadNearbyStops();
   }
 
   done() {
     this.addStopsDone.emit(0);
+  }
+
+  private toast(message: string) {
+    this.snackBar.open(message, undefined, {
+      duration: 500
+    });
   }
 }

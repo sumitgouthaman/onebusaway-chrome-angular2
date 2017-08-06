@@ -1,14 +1,38 @@
-<md-card>
-  <md-card-header>
-    <md-card-title>{{ stop.name }} ({{ stop.formattedDirection }} bound)</md-card-title>
-  </md-card-header>
-  <md-card-content>
-  </md-card-content>
-  <md-card-actions>
-    <div fxLayout="column">
-      <button md-button fxFlexAlign="end">
-        Remove
-      </button>
-    </div>
-  </md-card-actions>
-</md-card>
+<section>
+  <md-card>
+    <md-card-header>
+      <md-card-title>{{ stop.name }} ({{ stop.formattedDirection }})</md-card-title>
+      <md-card-subtitle>{{ stop.formattedDirection }}</md-card-subtitle>
+    </md-card-header>
+    <md-card-content>
+      <p *ngIf="errorLoadingStops">
+        Error loading arrivals.
+      </p>
+      <p *ngIf="!errorLoadingStops && arrivalDepartures === null">
+        Loading arrivals &hellip;
+      </p>
+      <app-bootstrap-table *ngIf="!errorLoadingStops && arrivalDepartures !== null"
+        [items]="arrivalDepartures"
+        [columns]="[
+          ['Route', 'routeShortName'],
+          ['Towards', 'tripHeadsign'],
+          ['Sheduled', 'relativeScheduledArrivalTime'],
+          ['Predicted', 'relativePredictedArrivalTime']
+        ]"
+        [emptyMessage]="'No upcoming arrivals found.'">
+      </app-bootstrap-table>
+    </md-card-content>
+    <md-card-actions fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center">
+      <button md-icon-button
+          (click)="refresh(true)"
+          color="primary">
+          <md-icon>refresh</md-icon>
+        </button>
+        <button md-icon-button
+          (click)="deleteStop()"
+          color="primary">
+          <md-icon>clear</md-icon>
+        </button>
+    </md-card-actions>
+  </md-card>
+</section>

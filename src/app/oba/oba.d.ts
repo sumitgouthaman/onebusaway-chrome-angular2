@@ -9,4 +9,15 @@ export class Stop {
   formattedDirection: string;
   id: string;
   name: string;
+  region: Region;
+}
+
+export class ArrivalDeparture {
+  routeLongName: string;
+  routeShortName: string;
+  scheduledArrivalTime: number;
+  relativeScheduledArrivalTime: string;
+  predictedArrivalTime: number;
+  relativePredictedArrivalTime: string;
+  tripHeadsign: string;
 }

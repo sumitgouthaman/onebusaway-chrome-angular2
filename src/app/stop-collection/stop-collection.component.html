@@ -1,8 +1,10 @@
 <div fxLayout="column" fxLayoutGap="10px">
-  <md-card *ngIf="!stops">
+  <md-card *ngIf="!stops || !stops.length">
     <md-card-content>
       No stops added yet. Try adding some &hellip;
     </md-card-content>
   </md-card>
-  <app-stop-details *ngFor="let stop of stops" [stop]="stop"></app-stop-details>
+  <app-stop-details
+    *ngFor="let stop of stops"
+    [stop]="stop"></app-stop-details>
 </div>

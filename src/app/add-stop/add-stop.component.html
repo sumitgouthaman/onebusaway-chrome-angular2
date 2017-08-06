@@ -1,17 +1,34 @@
 <section>
-  <md-card class="example-card">
-    <md-card-title>Add stop</md-card-title>
-    <md-card-content>
-      <md-list>
-        <md-list-item *ngFor="let stop of nearbyStops">
-          <button md-button (click)="addStop(stop)">
-            Stop# {{ stop.code }}: {{ stop.name }} ({{ stop.formattedDirection }} bound)
-          </button>
-        </md-list-item>
-      </md-list>
+  <md-card>
+    <md-card-header fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center">
+      <span>Region:</span>
+      <md-select placeholder="Region" floatPlaceholder="never" [(ngModel)]="selectedRegion" (change)="regionChanged()">
+        <md-option *ngFor="let region of allRegions" [value]="region">{{ region.regionName }}</md-option>
+      </md-select>
+    </md-card-header>
+    <md-card-content fxLayout="column" fxLayoutGap="10px">
+      <p *ngIf="!selectedRegion">No region selected.</p>
+      <p *ngIf="selectedRegion && !nearbyStops">Loading stops &hellip;</p>
+      <p *ngIf="selectedRegion && nearbyStops">Stops near you</p>
+      <app-bootstrap-table *ngIf="selectedRegion && nearbyStops" [items]="nearbyStops"
+        [columns]="[['Stop#', 'code'], ['Stop name', 'name'], ['Direction', 'formattedDirection']]"
+        (itemClicked)="addStop($event)" [emptyMessage]="'No stops found'">
+      </app-bootstrap-table>
+      <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">
+        <md-input-container>
+          <input mdInput type="number" placeholder="Add specific stop number" [(ngModel)]="stopNumber">
+        </md-input-container>
+        <button md-button (click)="addSpecificStops()" color="primary">
+          Add
+        </button>
+      </div>
     </md-card-content>
     <md-card-actions>
-      <button md-raised-button color="primary" (click)="done()">Done</button>
+      <div fxLayout="column">
+        <button md-icon-button fxFlexAlign="end" (click)="done()" color="primary">
+          <md-icon>done</md-icon>
+        </button>
+      </div>
     </md-card-actions>
   </md-card>
 </section>

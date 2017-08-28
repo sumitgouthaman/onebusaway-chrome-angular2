@@ -14,6 +14,47 @@ export class ObaService {
   private allRegionsPromise: Promise<Array<Region>>;
   private defaultRegionPromise: Promise<Region>;
 
+  private static getJitteredDelay(delay: number, jitter: number): number {
+    const appliedJitter = Math.floor(Math.random() * (jitter * 2 + 1)) - jitter;
+    return delay - appliedJitter;
+  }
+
+  private static retryPromiseInner<T>(requestId: string, promiseLambda: () => Promise<T>,
+    resolve: (T) => void, reject: (any) => void,
+    maxRetries: number = 3, initialDelay: number, maxDelay: number, attemptNum: number = 0) {
+
+    console.log(`Attempt ${attemptNum}/${maxRetries} of request ${requestId}`);
+    if (attemptNum > maxRetries) {
+      reject(`Request ${requestId} failed after ${attemptNum} attempts.`);
+    }
+
+    let delay = attemptNum === 0 ? 0 : initialDelay * Math.pow(2, attemptNum - 1);
+    delay = Math.min(delay, maxDelay);
+    delay = ObaService.getJitteredDelay(delay, 25);
+    delay = Math.max(0, delay);
+    console.log(`Attempt ${attemptNum}/${maxRetries} of request ${requestId} will use delay: ${delay}`);
+
+    setTimeout(() => {
+      promiseLambda().then((result: T) => {
+        resolve(result);
+      }).catch(error => {
+        ObaService.retryPromiseInner(
+          requestId, promiseLambda, resolve, reject,
+          maxRetries, initialDelay, maxDelay, attemptNum + 1);
+      });
+    }, delay);
+  }
+
+  private static retryPromise<T>(requestId: string, promiseLambda: () => Promise<T>,
+    maxRetries: number = 3, initialDelay: number = 200, maxDelay: number = 2000):
+    Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      ObaService.retryPromiseInner(requestId, promiseLambda,
+        resolve, reject,
+        maxRetries, initialDelay, maxDelay, 0);
+    });
+  }
+
   private static formatDirection(direction: string): string {
     return direction
       .replace('N', 'North')
@@ -61,67 +102,73 @@ export class ObaService {
   }
 
   getNearbyStops(region: Region, coords: Coordinates): Promise<Array<Stop>> {
-    return new Promise<Array<Stop>>((resolve, reject) => {
-      this.http.get(
-        urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
-        {
-          params: new HttpParams()
-          .set('key', environment.obaApiKey)
-          .set('lat', coords.latitude.toString())
-          .set('lon', coords.longitude.toString())
-        }
-      ).subscribe((result: any) => {
-        const stops: Array<Stop> = result.data.list.map(
-          s => ObaService.enhanceStopData(s, region));
-        resolve(stops);
-      }, error => {
-        reject(error);
+    return ObaService.retryPromise('getNearbyStops', () => {
+      return new Promise<Array<Stop>>((resolve, reject) => {
+        this.http.get(
+          urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
+          {
+            params: new HttpParams()
+            .set('key', environment.obaApiKey)
+            .set('lat', coords.latitude.toString())
+            .set('lon', coords.longitude.toString())
+          }
+        ).subscribe((result: any) => {
+          const stops: Array<Stop> = result.data.list.map(
+            s => ObaService.enhanceStopData(s, region));
+          resolve(stops);
+        }, error => {
+          reject(error);
+        });
       });
     });
   }
 
   getSpecificStop(region: Region, coords: Coordinates, stopNumber: number): Promise<Stop> {
-    return new Promise<Stop>((resolve, reject) => {
-      this.http.get(
-        urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
-        {
-          params: new HttpParams()
-          .set('key', environment.obaApiKey)
-          .set('lat', coords.latitude.toString())
-          .set('lon', coords.longitude.toString())
-          .set('query', stopNumber.toString())
-        }
-      ).subscribe((result: any) => {
-        if (!result.data.list.length) {
-          reject('Stop not found.');
-        }
-        const stops: Array<Stop> = result.data.list.map(
-          s => ObaService.enhanceStopData(s, region));
-        const stop: Stop = stops[0];
-        resolve(stop);
-      }, error => {
-        reject('Error fetching stop.');
+    return ObaService.retryPromise('getSpecificStop', () => {
+      return new Promise<Stop>((resolve, reject) => {
+        this.http.get(
+          urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
+          {
+            params: new HttpParams()
+            .set('key', environment.obaApiKey)
+            .set('lat', coords.latitude.toString())
+            .set('lon', coords.longitude.toString())
+            .set('query', stopNumber.toString())
+          }
+        ).subscribe((result: any) => {
+          if (!result.data.list.length) {
+            reject('Stop not found.');
+          }
+          const stops: Array<Stop> = result.data.list.map(
+            s => ObaService.enhanceStopData(s, region));
+          const stop: Stop = stops[0];
+          resolve(stop);
+        }, error => {
+          reject('Error fetching stop.');
+        });
       });
     });
   }
 
   getArrivalDepartures(stop: Stop): Promise<Array<ArrivalDeparture>> {
-    return new Promise<Array<ArrivalDeparture>>((resolve, reject) => {
-      this.http.get(
-        urlJoin(stop.region.obaBaseUrl, `/api/where/arrivals-and-departures-for-stop/${stop.id}.json`),
-        {
-          params: new HttpParams()
-          .set('key', environment.obaApiKey)
-        }
-      ).subscribe((result: any) => {
-        const arrivalDepartures: Array<ArrivalDeparture> = result.data.entry.arrivalsAndDepartures.map((ad: ArrivalDeparture) => {
-          ad.relativeScheduledArrivalTime = ObaService.getTimeMinsLeft(ad.scheduledArrivalTime);
-          ad.relativePredictedArrivalTime = ObaService.getTimeMinsLeft(ad.predictedArrivalTime);
-          return ad;
+    return ObaService.retryPromise('getArrivalDepartures', () => {
+      return new Promise<Array<ArrivalDeparture>>((resolve, reject) => {
+        this.http.get(
+          urlJoin(stop.region.obaBaseUrl, `/api/where/arrivals-and-departures-for-stop/${stop.id}.json`),
+          {
+            params: new HttpParams()
+            .set('key', environment.obaApiKey)
+          }
+        ).subscribe((result: any) => {
+          const arrivalDepartures: Array<ArrivalDeparture> = result.data.entry.arrivalsAndDepartures.map((ad: ArrivalDeparture) => {
+            ad.relativeScheduledArrivalTime = ObaService.getTimeMinsLeft(ad.scheduledArrivalTime);
+            ad.relativePredictedArrivalTime = ObaService.getTimeMinsLeft(ad.predictedArrivalTime);
+            return ad;
+          });
+          resolve(arrivalDepartures);
+        }, error => {
+          reject(error);
         });
-        resolve(arrivalDepartures);
-      }, error => {
-        reject(error);
       });
     });
   }

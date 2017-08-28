@@ -7,53 +7,13 @@ import * as regionsData from './regions-v3.json';
 
 import * as urlJoin from 'url-join';
 import * as moment from 'moment';
+import { RetryPromise } from 'promise-exponential-retry';
 
 @Injectable()
 export class ObaService {
 
   private allRegionsPromise: Promise<Array<Region>>;
   private defaultRegionPromise: Promise<Region>;
-
-  private static getJitteredDelay(delay: number, jitter: number): number {
-    const appliedJitter = Math.floor(Math.random() * (jitter * 2 + 1)) - jitter;
-    return delay - appliedJitter;
-  }
-
-  private static retryPromiseInner<T>(requestId: string, promiseLambda: () => Promise<T>,
-    resolve: (T) => void, reject: (any) => void,
-    maxRetries: number = 3, initialDelay: number, maxDelay: number, attemptNum: number = 0) {
-
-    console.log(`Attempt ${attemptNum}/${maxRetries} of request ${requestId}`);
-    if (attemptNum > maxRetries) {
-      reject(`Request ${requestId} failed after ${attemptNum} attempts.`);
-    }
-
-    let delay = attemptNum === 0 ? 0 : initialDelay * Math.pow(2, attemptNum - 1);
-    delay = Math.min(delay, maxDelay);
-    delay = ObaService.getJitteredDelay(delay, 25);
-    delay = Math.max(0, delay);
-    console.log(`Attempt ${attemptNum}/${maxRetries} of request ${requestId} will use delay: ${delay}`);
-
-    setTimeout(() => {
-      promiseLambda().then((result: T) => {
-        resolve(result);
-      }).catch(error => {
-        ObaService.retryPromiseInner(
-          requestId, promiseLambda, resolve, reject,
-          maxRetries, initialDelay, maxDelay, attemptNum + 1);
-      });
-    }, delay);
-  }
-
-  private static retryPromise<T>(requestId: string, promiseLambda: () => Promise<T>,
-    maxRetries: number = 3, initialDelay: number = 200, maxDelay: number = 2000):
-    Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      ObaService.retryPromiseInner(requestId, promiseLambda,
-        resolve, reject,
-        maxRetries, initialDelay, maxDelay, 0);
-    });
-  }
 
   private static formatDirection(direction: string): string {
     return direction
@@ -102,7 +62,7 @@ export class ObaService {
   }
 
   getNearbyStops(region: Region, coords: Coordinates): Promise<Array<Stop>> {
-    return ObaService.retryPromise('getNearbyStops', () => {
+    return RetryPromise.retryPromise('getNearbyStops', () => {
       return new Promise<Array<Stop>>((resolve, reject) => {
         this.http.get(
           urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
@@ -124,7 +84,7 @@ export class ObaService {
   }
 
   getSpecificStop(region: Region, coords: Coordinates, stopNumber: number): Promise<Stop> {
-    return ObaService.retryPromise('getSpecificStop', () => {
+    return RetryPromise.retryPromise('getSpecificStop', () => {
       return new Promise<Stop>((resolve, reject) => {
         this.http.get(
           urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
@@ -151,7 +111,7 @@ export class ObaService {
   }
 
   getArrivalDepartures(stop: Stop): Promise<Array<ArrivalDeparture>> {
-    return ObaService.retryPromise('getArrivalDepartures', () => {
+    return RetryPromise.retryPromise('getArrivalDepartures', () => {
       return new Promise<Array<ArrivalDeparture>>((resolve, reject) => {
         this.http.get(
           urlJoin(stop.region.obaBaseUrl, `/api/where/arrivals-and-departures-for-stop/${stop.id}.json`),

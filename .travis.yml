@@ -21,4 +21,4 @@ before_script:
 - npm install
 - npm run-script build
 
-script: npm test
+script: npm run-script testonce

@@ -5,7 +5,7 @@ OneBusAway Chrome extension (Angular 2)
 This is a handy little extension that lets you monitor bus stops near you for
 arrival times of upcoming buses.  
 
-### Screenshot
+### Demo
 ![Adding nearby stops](/screenshots/add_nearby_stop.gif "Adding nearby stops")
 
 ### Important notes
@@ -23,6 +23,10 @@ open transit data website.
 in the `obaApiKey` variable.  
     1. The KEY can be obtained by emailing your local transit agency. For
     Sound Transit, send an email to [OBA_API_Key@soundtransit.org](mailto:OBA_API_Key@soundtransit.org?subject=API%20Key%20request).  
-1. Compile the app using `ng build --prod --aot`.  
+1. Compile the app using `npm run-script build`.  
 1. The `dist` folder contains the extension code. You can load this in chrome
 as an **unpacked extension** by following the instructions [here](https://developer.chrome.com/extensions/getstarted#unpacked).  
+
+### How to run unit tests
+1. Run `npm run-script test` to keep tests running continously.  
+1. Run `npm run-script testonce` to run tests only once.  

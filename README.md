@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/sumitgouthaman/onebusaway-chrome-angular2.svg?branch=master)](https://travis-ci.org/sumitgouthaman/onebusaway-chrome-angular2)
+
 OneBusAway Chrome extension (Angular 2)
 =======================================
 This is a handy little extension that lets you monitor bus stops near you for
@@ -5,9 +7,6 @@ arrival times of upcoming buses.
 
 ### Screenshot
 ![Adding nearby stops](/screenshots/add_nearby_stop.gif "Adding nearby stops")
-
-### Build Status
-[![Build Status](https://travis-ci.org/sumitgouthaman/onebusaway-chrome-angular2.svg?branch=master)](https://travis-ci.org/sumitgouthaman/onebusaway-chrome-angular2)
 
 ### Important notes
 - Only the Puget Sound region is tested at the moment.  

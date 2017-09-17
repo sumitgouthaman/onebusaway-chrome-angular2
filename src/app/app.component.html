@@ -1,6 +1,6 @@
 <div fxLayout="column" fxLayoutGap="10px">
   <md-toolbar color="primary">
-    <span>One Bus Away</span>
+    <span id="obatitle">One Bus Away</span>
     <span class="md-spacer"></span>
     <button *ngIf="!addStopsMode" (click)="toggleAddStopsMode()" md-button>Add stop</button>
     <button *ngIf="addStopsMode" (click)="toggleAddStopsMode()" md-button>Done</button>

@@ -6,9 +6,8 @@ import {
   EventEmitter,
 } from '@angular/core';
 
-import { Stop, ArrivalDeparture } from '../../oba/oba';
 import { StorageService } from '../../storage/storage.service';
-import { ObaService } from '../../oba/oba.service';
+import { Stop, ArrivalDeparture, ObaService } from '../../oba/oba.service';
 
 import { MdSnackBar } from '@angular/material';
 

@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 
 import { StorageService } from '../storage/storage.service';
-import { Stop } from '../oba/oba';
+import { Stop } from '../oba/oba.service';
 
 import { MdSnackBar } from '@angular/material';
 

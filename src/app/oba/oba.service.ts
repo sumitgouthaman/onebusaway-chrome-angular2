@@ -2,12 +2,35 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-import { Region, Stop, ArrivalDeparture } from './oba';
 import * as regionsData from './regions-v3.json';
 
 import * as urlJoin from 'url-join';
 import * as moment from 'moment';
 import { RetryPromise } from 'promise-exponential-retry';
+
+export interface Region {
+  obaBaseUrl: string;
+  regionName: string;
+}
+
+export class Stop {
+  code: string;
+  direction: string;
+  formattedDirection: string;
+  id: string;
+  name: string;
+  region: Region;
+}
+
+export class ArrivalDeparture {
+  routeLongName: string;
+  routeShortName: string;
+  scheduledArrivalTime: number;
+  relativeScheduledArrivalTime: string;
+  predictedArrivalTime: number;
+  relativePredictedArrivalTime: string;
+  tripHeadsign: string;
+}
 
 @Injectable()
 export class ObaService {

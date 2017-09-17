@@ -9,8 +9,7 @@ import {
 
 import { MdSnackBar } from '@angular/material';
 
-import { Region, Stop } from '../oba/oba';
-import { ObaService } from '../oba/oba.service';
+import { Region, Stop, ObaService } from '../oba/oba.service';
 import { GeoService } from '../geo/geo.service';
 import { StorageService } from '../storage/storage.service';
 

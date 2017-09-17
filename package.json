@@ -5,8 +5,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
-    "test": "ng test",
+    "build": "ng build --prod --aot",
+    "test": "ng test --single-run",
     "lint": "ng lint"
   },
   "private": true,

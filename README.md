@@ -6,6 +6,9 @@ arrival times of upcoming buses.
 ### Screenshot
 ![Adding nearby stops](/screenshots/add_nearby_stop.gif "Adding nearby stops")
 
+### Build Status
+[![Build Status](https://travis-ci.org/sumitgouthaman/onebusaway-chrome-angular2.svg?branch=master)](https://travis-ci.org/sumitgouthaman/onebusaway-chrome-angular2)
+
 ### Important notes
 - Only the Puget Sound region is tested at the moment.  
 

@@ -8,7 +8,6 @@ arrival times of upcoming buses.
 
 ### Important notes
 - Only the Puget Sound region is tested at the moment.  
-- Unit tests don't work. They are auto-generated versions from Angular CLI.
 
 ### OneBusAway
 - This app is powered by the [OneBusAway API](https://onebusaway.org/).  

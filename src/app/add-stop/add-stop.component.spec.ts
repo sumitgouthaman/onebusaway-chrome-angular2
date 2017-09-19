@@ -67,22 +67,22 @@ describe('AddStopComponent', () => {
     const obaServiceStub = {
       getRegions() {
         return new Promise<Array<Region>>(resolve => {
-          resolve(this.regions);
+          resolve(regions);
         });
       },
       getDefaultRegion() {
         return new Promise<Region>(resolve => {
-          resolve(this.regions[0]);
+          resolve(regions[0]);
         });
       },
       getNearbyStops(region: Region, coords: Coordinates) {
         return new Promise<Array<Stop>>(resolve => {
-          resolve(this.stops);
+          resolve(stops);
         });
       },
       getSpecificStop(region: Region, coords: Coordinates, stopNumber: number) {
         return new Promise<Stop>(resolve => {
-          resolve(this.stops[0]);
+          resolve(stops[0]);
         });
       },
     };

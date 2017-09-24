@@ -7,10 +7,20 @@ import * as regionsData from './regions-v3.json';
 import * as urlJoin from 'url-join';
 import * as moment from 'moment';
 import { RetryPromise } from 'promise-exponential-retry';
+import { GeoService } from '../geo/geo.service';
+
+interface Bound {
+  lat: number;
+  latSpan: number;
+  lon: number;
+  lonSpan: number;
+}
 
 export interface Region {
   obaBaseUrl: string;
   regionName: string;
+  bounds: Array<Bound>;
+  experimental: boolean;
 }
 
 export class Stop {
@@ -36,7 +46,9 @@ export class ArrivalDeparture {
 export class ObaService {
 
   private allRegionsPromise: Promise<Array<Region>>;
+  private filteredRegionsPromise: Promise<Array<Region>>;
   private defaultRegionPromise: Promise<Region>;
+  private useExperimentalRegions = false;
 
   private static formatDirection(direction: string): string {
     return direction
@@ -60,24 +72,72 @@ export class ObaService {
     return stop;
   }
 
-  constructor(private http: HttpClient) {
+  private static coordsInBound(bound: Bound, coords: Coordinates) {
+    const halfLatSpan = bound.latSpan / 2.0;
+    const halfLonSpan = bound.lonSpan / 2.0;
+    const latMin = bound.lat - halfLatSpan;
+    const latMax = bound.lat + halfLatSpan;
+    const lonMin = bound.lon - halfLonSpan;
+    const lonMax = bound.lon + halfLonSpan;
+    return (
+      coords.latitude >= latMin
+      && coords.latitude <= latMax
+      && coords.longitude >= lonMin
+      && coords.longitude <= lonMax
+    );
+  }
+
+  private static coordsInRegion(region: Region, coords: Coordinates) {
+    return region.bounds.some(bound => ObaService.coordsInBound(bound, coords));
+  }
+
+  constructor(private http: HttpClient, private geoService: GeoService) {
     this.allRegionsPromise = new Promise<Array<Region>>(resolve => {
       resolve((<any>regionsData).data.list);
     });
 
-    this.defaultRegionPromise = new Promise<Region>(resolve => {
-      this.allRegionsPromise.then(regions => {
-        const pugetSound = regions.filter(r => r.regionName === 'Puget Sound');
-        if (pugetSound.length > 0) {
-          resolve(pugetSound[0]);
+    this.filteredRegionsPromise = new Promise<Array<Region>>((resolve, reject) => {
+      this.allRegionsPromise.then(allRegions => {
+        const filteredRegions = allRegions.filter(r => {
+          if (this.useExperimentalRegions) {
+            return true;
+          } else {
+            return !r.experimental;
+          }
+        });
+        console.log(`Using ${filteredRegions.length}/${allRegions.length} regions after filtering.`);
+        resolve(filteredRegions);
+      }).catch(error => {
+        reject(error);
+      });
+    });
+
+    this.defaultRegionPromise = new Promise<Region>((resolve, reject) => {
+      this.filteredRegionsPromise.then(regions => {
+        if (!regions) {
+          reject('No regions available.');
+          return;
         }
-        resolve(regions.length ? regions[0] : null);
+        this.geoService.getLocation().then(coords => {
+          const regionsInBounds = regions.filter(r => ObaService.coordsInRegion(r, coords));
+          if (regionsInBounds.length < 1) {
+            reject('No region\'s bounds match the current coordinates.');
+            return;
+          }
+          if (regionsInBounds.length > 1) {
+            const regionNames = regionsInBounds.map(r => r.regionName);
+            console.log(`Multiple regions matched to location. Will return first one. Regions: ${regionNames}`);
+          }
+          resolve(regionsInBounds[0]);
+        }).catch(error => {
+          reject('Error determining regions. Couldn\'t get location');
+        });
       });
     });
   }
 
-  getRegions(): Promise<Array<Region>> {
-    return this.allRegionsPromise;
+  getRegions(returnExperimentalRegions = false): Promise<Array<Region>> {
+    return this.filteredRegionsPromise;
   }
 
   getDefaultRegion(): Promise<Region> {

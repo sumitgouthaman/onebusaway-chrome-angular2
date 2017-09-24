@@ -15,6 +15,15 @@ describe('StopDetailsComponent', () => {
   const region: Region = {
     obaBaseUrl: 'reg1url',
     regionName: 'reg1',
+    experimental: false,
+    bounds: [
+      {
+        lat: 5,
+        latSpan: 2,
+        lon: 15,
+        lonSpan: 4
+      }
+    ]
   };
   const inputStop: Stop = {
     code: 'code1',

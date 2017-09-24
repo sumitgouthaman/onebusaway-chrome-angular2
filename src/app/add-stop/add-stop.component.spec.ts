@@ -21,10 +21,28 @@ describe('AddStopComponent', () => {
     {
       obaBaseUrl: 'reg1url',
       regionName: 'reg1',
+      experimental: false,
+      bounds: [
+        {
+          lat: 5,
+          latSpan: 2,
+          lon: 15,
+          lonSpan: 4
+        }
+      ]
     },
     {
       obaBaseUrl: 'reg2url',
       regionName: 'reg2',
+      experimental: false,
+      bounds: [
+        {
+          lat: 10,
+          latSpan: 2,
+          lon: 20,
+          lonSpan: 4
+        }
+      ]
     },
   ];
   const stops: Array<Stop> = [

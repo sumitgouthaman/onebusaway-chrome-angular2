@@ -38,9 +38,7 @@ export class AddStopComponent implements OnInit {
       this.allRegions = regions;
       this.obaService.getDefaultRegion().then(region => {
         this.selectedRegion = region;
-        if (region) {
-          this.loadNearbyStops();
-        }
+        this.loadNearbyStops();
       });
     });
   }

@@ -19,7 +19,7 @@ describe('GeoService', () => {
           }
         });
       }
-    }
+    };
     spyOnProperty(navigator, 'geolocation', 'get').and.returnValue(geoLocationStub);
     inject([GeoService], (service: GeoService) => {
       expect(service).toBeTruthy();

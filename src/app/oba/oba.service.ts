@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs/Rx';
 import { environment } from '../../environments/environment';
 
 import * as regionsData from './regions-v3.json';
 
 import * as urlJoin from 'url-join';
 import * as moment from 'moment';
-import { RetryPromise } from 'promise-exponential-retry';
 import { GeoService } from '../geo/geo.service';
 
 interface Bound {
@@ -45,10 +45,10 @@ export class ArrivalDeparture {
 @Injectable()
 export class ObaService {
 
+  private allRegionsPromiseWithExperimental: Promise<Array<Region>>;
   private allRegionsPromise: Promise<Array<Region>>;
-  private filteredRegionsPromise: Promise<Array<Region>>;
+  private defaultRegionPromiseWithExperimental: Promise<Region>;
   private defaultRegionPromise: Promise<Region>;
-  private useExperimentalRegions = false;
 
   private static formatDirection(direction: string): string {
     return direction
@@ -91,34 +91,14 @@ export class ObaService {
     return region.bounds.some(bound => ObaService.coordsInBound(bound, coords));
   }
 
-  constructor(private http: HttpClient, private geoService: GeoService) {
-    this.allRegionsPromise = new Promise<Array<Region>>(resolve => {
-      resolve((<any>regionsData).data.list);
-    });
-
-    this.filteredRegionsPromise = new Promise<Array<Region>>((resolve, reject) => {
-      this.allRegionsPromise.then(allRegions => {
-        const filteredRegions = allRegions.filter(r => {
-          if (this.useExperimentalRegions) {
-            return true;
-          } else {
-            return !r.experimental;
-          }
-        });
-        console.log(`Using ${filteredRegions.length}/${allRegions.length} regions after filtering.`);
-        resolve(filteredRegions);
-      }).catch(error => {
-        reject(error);
-      });
-    });
-
-    this.defaultRegionPromise = new Promise<Region>((resolve, reject) => {
-      this.filteredRegionsPromise.then(regions => {
+  private static getDefaultRegionFromRegionsPromise(regionsPromise: Promise<Array<Region>>, geoService: GeoService) {
+    return new Promise<Region>((resolve, reject) => {
+      regionsPromise.then(regions => {
         if (!regions) {
           reject('No regions available.');
           return;
         }
-        this.geoService.getLocation().then(coords => {
+        geoService.getLocation().then(coords => {
           const regionsInBounds = regions.filter(r => ObaService.coordsInRegion(r, coords));
           if (regionsInBounds.length < 1) {
             reject('No region\'s bounds match the current coordinates.');
@@ -136,82 +116,111 @@ export class ObaService {
     });
   }
 
-  getRegions(returnExperimentalRegions = false): Promise<Array<Region>> {
-    return this.filteredRegionsPromise;
+  private static retryExponential (errors) {
+    return Observable.zip(
+      Observable.range(1, 3), errors, function (i, e) { return i; })
+      .flatMap(function (i) {
+        const delay = i * 500;
+        console.log(`Delay retry by ${delay} millis.`);
+        return Observable.timer(delay);
+    });
   }
 
-  getDefaultRegion(): Promise<Region> {
-    return this.defaultRegionPromise;
+  constructor(private http: HttpClient, private geoService: GeoService) {
+    this.allRegionsPromiseWithExperimental = new Promise<Array<Region>>(resolve => {
+      resolve((<any>regionsData).data.list);
+    });
+
+    this.allRegionsPromise = new Promise<Array<Region>>((resolve, reject) => {
+      this.allRegionsPromiseWithExperimental.then(allRegions => {
+        const filteredRegions = allRegions.filter(r => !r.experimental);
+        console.log(`Using ${filteredRegions.length}/${allRegions.length} regions after removing experimental.`);
+        resolve(filteredRegions);
+      }).catch(error => {
+        reject(error);
+      });
+    });
+
+    this.defaultRegionPromiseWithExperimental = ObaService.getDefaultRegionFromRegionsPromise(
+      this.allRegionsPromiseWithExperimental, this.geoService);
+
+    this.defaultRegionPromise = ObaService.getDefaultRegionFromRegionsPromise(
+      this.allRegionsPromise, this.geoService);
+  }
+
+  getRegions(returnExperimentalRegions = false): Promise<Array<Region>> {
+    return returnExperimentalRegions ? this.allRegionsPromiseWithExperimental : this.allRegionsPromise;
+  }
+
+  getDefaultRegion(returnExperimentalRegions = false): Promise<Region> {
+    return returnExperimentalRegions ? this.defaultRegionPromiseWithExperimental : this.defaultRegionPromise;
   }
 
   getNearbyStops(region: Region, coords: Coordinates): Promise<Array<Stop>> {
-    return RetryPromise.retryPromise('getNearbyStops', () => {
-      return new Promise<Array<Stop>>((resolve, reject) => {
-        this.http.get(
-          urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
-          {
-            params: new HttpParams()
-            .set('key', environment.obaApiKey)
-            .set('lat', coords.latitude.toString())
-            .set('lon', coords.longitude.toString())
-          }
-        ).subscribe((result: any) => {
-          const stops: Array<Stop> = result.data.list.map(
-            s => ObaService.enhanceStopData(s, region));
-          resolve(stops);
-        }, error => {
-          reject(error);
-        });
+    return new Promise<Array<Stop>>((resolve, reject) => {
+      this.http.get(
+        urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
+        {
+          params: new HttpParams()
+          .set('key', environment.obaApiKey)
+          .set('lat', coords.latitude.toString())
+          .set('lon', coords.longitude.toString())
+        }
+      ).retryWhen(ObaService.retryExponential)
+      .subscribe((result: any) => {
+        const stops: Array<Stop> = result.data.list.map(
+          s => ObaService.enhanceStopData(s, region));
+        resolve(stops);
+      }, error => {
+        reject(error);
       });
     });
   }
 
   getSpecificStop(region: Region, coords: Coordinates, stopNumber: number): Promise<Stop> {
-    return RetryPromise.retryPromise('getSpecificStop', () => {
-      return new Promise<Stop>((resolve, reject) => {
-        this.http.get(
-          urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
-          {
-            params: new HttpParams()
-            .set('key', environment.obaApiKey)
-            .set('lat', coords.latitude.toString())
-            .set('lon', coords.longitude.toString())
-            .set('query', stopNumber.toString())
-          }
-        ).subscribe((result: any) => {
-          if (!result.data.list.length) {
-            reject('Stop not found.');
-          }
-          const stops: Array<Stop> = result.data.list.map(
-            s => ObaService.enhanceStopData(s, region));
-          const stop: Stop = stops[0];
-          resolve(stop);
-        }, error => {
-          reject('Error fetching stop.');
-        });
+    return new Promise<Stop>((resolve, reject) => {
+      this.http.get(
+        urlJoin(region.obaBaseUrl, '/api/where/stops-for-location.json'),
+        {
+          params: new HttpParams()
+          .set('key', environment.obaApiKey)
+          .set('lat', coords.latitude.toString())
+          .set('lon', coords.longitude.toString())
+          .set('query', stopNumber.toString())
+        }
+      ).retryWhen(ObaService.retryExponential)
+      .subscribe((result: any) => {
+        if (!result.data.list.length) {
+          reject('Stop not found.');
+        }
+        const stops: Array<Stop> = result.data.list.map(
+          s => ObaService.enhanceStopData(s, region));
+        const stop: Stop = stops[0];
+        resolve(stop);
+      }, error => {
+        reject('Error fetching stop.');
       });
     });
   }
 
   getArrivalDepartures(stop: Stop): Promise<Array<ArrivalDeparture>> {
-    return RetryPromise.retryPromise('getArrivalDepartures', () => {
-      return new Promise<Array<ArrivalDeparture>>((resolve, reject) => {
-        this.http.get(
-          urlJoin(stop.region.obaBaseUrl, `/api/where/arrivals-and-departures-for-stop/${stop.id}.json`),
-          {
-            params: new HttpParams()
-            .set('key', environment.obaApiKey)
-          }
-        ).subscribe((result: any) => {
-          const arrivalDepartures: Array<ArrivalDeparture> = result.data.entry.arrivalsAndDepartures.map((ad: ArrivalDeparture) => {
-            ad.relativeScheduledArrivalTime = ObaService.getTimeMinsLeft(ad.scheduledArrivalTime);
-            ad.relativePredictedArrivalTime = ObaService.getTimeMinsLeft(ad.predictedArrivalTime);
-            return ad;
-          });
-          resolve(arrivalDepartures);
-        }, error => {
-          reject(error);
+    return new Promise<Array<ArrivalDeparture>>((resolve, reject) => {
+      this.http.get(
+        urlJoin(stop.region.obaBaseUrl, `/api/where/arrivals-and-departures-for-stop/${stop.id}.json`),
+        {
+          params: new HttpParams()
+          .set('key', environment.obaApiKey)
+        }
+      ).retryWhen(ObaService.retryExponential)
+      .subscribe((result: any) => {
+        const arrivalDepartures: Array<ArrivalDeparture> = result.data.entry.arrivalsAndDepartures.map((ad: ArrivalDeparture) => {
+          ad.relativeScheduledArrivalTime = ObaService.getTimeMinsLeft(ad.scheduledArrivalTime);
+          ad.relativePredictedArrivalTime = ObaService.getTimeMinsLeft(ad.predictedArrivalTime);
+          return ad;
         });
+        resolve(arrivalDepartures);
+      }, error => {
+        reject(error);
       });
     });
   }
